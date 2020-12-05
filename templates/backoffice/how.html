@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <div id="container"></div>
+
+    <a id="lanzar_hormiga" class="btn btn-outline-primary" role="button" aria-pressed="true">Lanzar hormiga</a>
+    <a href="{{ url_for('reset') }}" class="btn btn-outline-danger" role="button" aria-pressed="true">Reset</a>
+{% endblock %}
+
+{% block script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+
+<script>
+    const socket = io()
+
+    $('#lanzar_hormiga').on('click', function() {
+        chart.series[0].data.forEach(d => d.update({'color': null}))
+        chart.redraw()
+        socket.emit("lanzar_hormiga", "");
+    });
+
+    socket.on('avanzar_hormiga', function(link) {
+        //console.log(link);
+        //console.log(chart.series[0]['data']);
+
+        var networkgraph_link = chart.series[0]['data'].filter(function(d) {
+            return d['from'] == link['from'] && d['to'] == link['to'];
+        })[0];
+        networkgraph_link.update({'color': 'yellow'});
+
+        chart.redraw();
+    });
+
+    socket.on('actualizar_feromona', function(link) {
+        //console.log(link);
+
+        var networkgraph_link = chart.series[0]['data'].filter(function(d) {
+            return d['from'] == link['from'] && d['to'] == link['to'];
+        })[0];
+        networkgraph_link.update({'feromone': link['feromone']});
+        chart.redraw();
+    });
+</script>
+
+<script>
+        var networkgraph_data = {{ data|tojson }};
+        var chart = Highcharts.chart('container', {
+            chart: {
+                type: 'networkgraph'
+            },
+            series: [{
+                dataLabels: {
+                    enabled: true,
+                    linkFormat: '{point.feromone}'
+                },
+                link: {
+                    width: 2
+                },
+                marker: {
+                    radius: 15
+                },
+                layoutAlgorithm: {
+                    maxIterations: 1,
+                    initialPositions: function() {
+                        this.nodes.forEach((node, i) => {
+                            //console.log(node);
+                            if (node.id == 'A') {
+                                node.plotX = 100;
+                                node.plotY = 100;
+                            }
+                            if (node.id == 'B') {
+                                node.plotX = 200;
+                                node.plotY = 100;
+                            }
+                            if (node.id == 'H') {
+                                node.plotX = 300;
+                                node.plotY = 200;
+                            }
+                            if (node.id == 'C') {
+                                node.plotX = 300;
+                                node.plotY = 80;
+                            }
+                            if (node.id == 'D') {
+                                node.plotX = 400;
+                                node.plotY = 100;
+                            }
+                            if (node.id == 'E') {
+                                node.plotX = 500;
+                                node.plotY = 100;
+                            }
+                        });
+                    }
+                },
+                data: networkgraph_data
+            }]
+    });
+    </script>
+{% endblock %}

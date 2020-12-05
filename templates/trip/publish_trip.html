@@ -1,0 +1,56 @@
+{% extends 'index.html' %}
+
+{% block title %} CarpooleArg | Publicar viaje {% endblock %}
+
+{% block body %}
+<div class="container p-3 my-3 bg-light">
+
+  <form method="post">
+
+    <div id="publish_trip_form_groups">
+
+      <div class="form-group">
+        <div class="input-group">
+          <div class="input-group-prepend mr-2">
+            <i class="bi bi-node-plus" style="font-size: 2rem; color: cornflowerblue;"></i>
+          </div>
+          <div class="col-sm-2">
+            <input name="node-1" type="text" class="form-control mt-2" id="" placeholder="Ej: A">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="form-group">
+      <button id="add_nodo" type="button" class="btn btn-link">Agregar nodo</button>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Publicar</button>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+  let node_number = 2;
+
+  $( "#add_nodo" ).click(function() {
+    $( "#publish_trip_form_groups" ).append(`
+      <div class="form-group">
+        <div class="input-group">
+          <div class="input-group-prepend mr-2">
+            <i class="bi bi-node-plus" style="font-size: 2rem; color: cornflowerblue;"></i>
+          </div>
+          <div class="col-sm-2">
+            <input name="node-${node_number}" type="text" class="form-control mt-2" id="">
+          </div>
+        </div>
+      </div>
+    `);
+
+    node_number += 1;
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends 'index.html' %}
+
+{% block title %} CarpooleArg | Buscar viaje {% endblock %}
+
+{% block body %}
+<div class="container p-3 my-3 bg-light">
+
+    <div id="container" class="mb-2"></div>
+
+    <button id="search" class="btn btn-outline-primary">Buscar</button>
+
+    <div id="best_trip_card" style="display: none;">
+        <div class="row d-flex justify-content-center mt-2">
+            <div class="col-sm-6">
+              <div class="card shadow rounded">
+                <div class="card-body">
+                  <div id="best_trip_nodes" class="card-text"></div>
+                  <span class="badge badge-success float-right">Mejor viaje</span>
+                </div>
+              </div>
+            </div>
+        </div>    
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block script %}
+<script>
+    var networkgraph_data = {{ data|tojson }};
+    var trips = {{ trips|tojson }};
+</script>
+
+<script>
+    $("#search").click(function() {
+        $.post("/trip/search", {}, function(data) {
+            var best_trip = data["best_trip"];
+
+            let length = best_trip.length;
+            // update best trip in graph
+            for (let i = 0; i < length-1; i++) {
+                var networkgraph_link = chart.series[0]['data'].filter(function(d) {
+                    return d['from'] == best_trip[i] && d['to'] == best_trip[i+1];
+                })[0];
+                networkgraph_link.update({'color': 'yellow'});
+            }
+
+            // update best trip in card
+            let i = 1;
+            for (let node of best_trip) {
+                if (i == length) {
+                    $("#best_trip_nodes").append(`
+                        <button type="button" class="btn btn-primary rounded-circle">${node}</button>
+                    `);
+                } else {
+                    $("#best_trip_nodes").append(`
+                        <button type="button" class="btn btn-primary rounded-circle">${node}</button> -> 
+                    `);
+                }
+
+                i += 1;
+            };
+
+            $("#best_trip_card").show();
+        });
+    });
+</script>
+
+<script>
+    var chart = Highcharts.chart('container', {
+    chart: {
+        type: 'networkgraph'
+    },
+    title: {
+        text: ''
+    },
+    series: [{
+        dataLabels: {
+            enabled: true,
+            linkFormat: ''
+        },
+        link: {
+            width: 2
+        },
+        marker: {
+            radius: 15
+        },
+        layoutAlgorithm: {
+            maxIterations: 1,
+            initialPositions: function() {
+                this.nodes.forEach((node, i) => {
+                    if (node.id == 'A') {
+                        node.plotX = 100;
+                        node.plotY = 100;
+                    }
+                    if (node.id == 'B') {
+                        node.plotX = 200;
+                        node.plotY = 100;
+                    }
+                    if (node.id == 'C') {
+                        node.plotX = 300;
+                        node.plotY = 100;
+                    }
+                    if (node.id == 'D') {
+                        node.plotX = 400;
+                        node.plotY = 100;
+                    }
+                    if (node.id == 'E') {
+                        node.plotX = 100;
+                        node.plotY = 200;
+                    }
+                    if (node.id == 'F') {
+                        node.plotX = 200;
+                        node.plotY = 200;
+                    }
+                    if (node.id == 'G') {
+                        node.plotX = 300;
+                        node.plotY = 200;
+                    }
+                    if (node.id == 'H') {
+                        node.plotX = 400;
+                        node.plotY = 200;
+                    }
+                    if (node.id == 'I') {
+                        node.plotX = 100;
+                        node.plotY = 300;
+                    }
+                    if (node.id == 'J') {
+                        node.plotX = 200;
+                        node.plotY = 300;
+                    }
+                    if (node.id == 'K') {
+                        node.plotX = 300;
+                        node.plotY = 300;
+                    }
+                    if (node.id == 'L') {
+                        node.plotX = 400;
+                        node.plotY = 300;
+                    }
+                    if (node.id == 'M') {
+                        node.plotX = 100;
+                        node.plotY = 400;
+                    }
+                    if (node.id == 'N') {
+                        node.plotX = 200;
+                        node.plotY = 400;
+                    }
+                    if (node.id == 'O') {
+                        node.plotX = 300;
+                        node.plotY = 400;
+                    }
+                    if (node.id == 'P') {
+                        node.plotX = 400;
+                        node.plotY = 400;
+                    }
+                });
+            }
+        },
+        data: networkgraph_data
+    }]
+});
+
+// draw published trips
+trips.forEach(function(trip) {
+    var networkgraph_link = chart.series[0]['data'].filter(function(d) {
+        return d['from'] == trip['from'] && d['to'] == trip['to'];
+    })[0];
+    networkgraph_link.update({'color': 'red'});
+});
+</script>
+{% endblock %}

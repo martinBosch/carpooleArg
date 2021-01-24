@@ -1,7 +1,7 @@
 from random import random
 from time import sleep
 
-from extensions import socketIO
+from flask_socketio import emit
 
 
 def choose_nodo_siguiente(probabilidades_a_nodos_sig, nodos_sig):
@@ -19,13 +19,15 @@ def choose_nodo_siguiente(probabilidades_a_nodos_sig, nodos_sig):
 
 
 def actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate, debug):
-    grafo.evaporar_feromona(evaporation_rate, debug)
+    grafo.evaporar_feromona(evaporation_rate)
 
     for i, j in zip(camino[0::1], camino[1::1]):
         feromona = 1 / distancia_camino
         grafo.actualizar_feromona(i, j, feromona)
-        if debug:
-            socketIO.emit('actualizar_feromona', {"from": i, "to": j, "feromone": grafo.feromona_rounded(i, j)})
+
+    if debug:
+        grafo.emit_feromona()
+        sleep(0.5)
 
 
 def probabilidades_a_nodos_siguentes(grafo, nodo):
@@ -53,7 +55,7 @@ def lanzar_hormiga(grafo, debug):
     while not grafo.es_nodo_final(nodo):
         nodo_sig = elegir_siguiente_nodo(grafo, nodo)
         if debug:
-            socketIO.emit("avanzar_hormiga", {"from": nodo, "to": nodo_sig})
+            emit("avanzar_hormiga", {"from": nodo, "to": nodo_sig})
 
         camino += [nodo_sig]
         distancia_camino += grafo.distancia(nodo, nodo_sig)
@@ -64,23 +66,25 @@ def lanzar_hormiga(grafo, debug):
     return camino, distancia_camino
 
 
-def ant_system(grafo, iterations, evaporation_rate, debug):
+def ant_system(trips, iterations, evaporation_rate, debug):
+    grafo = Grafo(grafo=trips)
+
     for iter_num in range(iterations):
         camino, distancia_camino = lanzar_hormiga(grafo, debug)
         actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate, debug)
 
         if debug:
-            sleep(0.5)
-            socketIO.emit('hormiga_finish', iter_num + 1)
+            emit('hormiga_finish', iter_num + 1)
             sleep(0.5)
         else:
-            socketIO.emit('inc_iter', iter_num + 1)
+            emit('inc_iter', iter_num + 1)
 
     if not debug:
         grafo.emit_feromona()
+        sleep(0.5)
 
-    mejor_camino = grafo.mejor_camino(nodo_inicial="A")
-    return mejor_camino
+    best_trip = grafo.mejor_camino(nodo_inicial="A")
+    emit('search_trip_finish', {"best_trip": best_trip})
 
 
 class Grafo:
@@ -112,17 +116,15 @@ class Grafo:
     def actualizar_feromona(self, nodo_origen, nodo_destino, new_feromona):
         self.grafo[nodo_origen][nodo_destino][self.FEROMONA] += new_feromona
 
-    def evaporar_feromona(self, evaporation_rate, debug):
+    def evaporar_feromona(self, evaporation_rate):
         for nodo_origen in self.grafo:
             for nodo_destino in self.grafo[nodo_origen]:
                 self.grafo[nodo_origen][nodo_destino][self.FEROMONA] *= 1 - evaporation_rate
-                if debug:
-                    socketIO.emit('actualizar_feromona', {"from": nodo_origen, "to": nodo_destino, "feromone": self.feromona_rounded(nodo_origen, nodo_destino)})
 
     def emit_feromona(self):
         for nodo_origen in self.grafo:
             for nodo_destino in self.grafo[nodo_origen]:
-                socketIO.emit('actualizar_feromona', {"from": nodo_origen, "to": nodo_destino, "feromone": self.feromona_rounded(nodo_origen, nodo_destino)})
+                emit('actualizar_feromona', {"from": nodo_origen, "to": nodo_destino, "feromone": self.feromona_rounded(nodo_origen, nodo_destino)})
 
     def mejor_camino(self, nodo_inicial):
         mejor_camino = [nodo_inicial]

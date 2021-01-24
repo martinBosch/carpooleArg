@@ -1,5 +1,6 @@
-from flask import Blueprint, session, render_template, request
-from backoffice.aco import Grafo, ant_system
+from flask import Blueprint, session, render_template
+from backoffice.aco import ant_system
+from extensions import socketIO
 
 
 bp = Blueprint("backoffice", __name__, url_prefix="/backoffice")
@@ -10,7 +11,7 @@ def home():
     return render_template("backoffice/index.html")
 
 
-@bp.route("/trip/search", methods=['GET', 'POST'])
+@bp.route("/trip/search")
 def search_trip():
     data = [
         {"from": "A", "to": "E", "feromone": 1},
@@ -47,20 +48,21 @@ def search_trip():
         {"from": "N", "to": "O", "feromone": 1},
         {"from": "O", "to": "P", "feromone": 1},
     ]
-
     trips = session.get("trips", {})
-    if request.method == "POST":
-        iter_input = int(request.form["iter_input"])
-        debug = request.form["debug"] == "true"
-        evaporation_rate = float(request.form["evaporation_rate"])
-
-        grafo = Grafo(grafo=trips)
-        best_trip = ant_system(grafo, iter_input, evaporation_rate, debug)
-        return {"best_trip": best_trip}
 
     return render_template("backoffice/search_trip.html",
                            data=data,
                            trips=to_trips_output(trips))
+
+
+@socketIO.on("search_trip")
+def handle_search_trip(data):
+    iter_input = int(data["iter_input"])
+    debug = data["debug"]
+    evaporation_rate = float(data["evaporation_rate"])
+
+    trips = session.get("trips", {})
+    ant_system(trips, iter_input, evaporation_rate, debug)
 
 
 def to_trips_output(trips):

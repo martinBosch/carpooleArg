@@ -96,6 +96,37 @@
     socket.on('inc_iter', function(iter_num) {
         $('#iter').text("Iteracion: " + iter_num)
     });
+
+    socket.on('search_trip_finish', function(data) {
+        var best_trip = data["best_trip"];
+
+        let length = best_trip.length;
+        // update best trip in graph
+        for (let i = 0; i < length-1; i++) {
+            var networkgraph_link = chart.series[0]['data'].filter(function(d) {
+                return d['from'] == best_trip[i] && d['to'] == best_trip[i+1];
+            })[0];
+            networkgraph_link.update({'color': 'yellow'});
+        }
+
+        // update best trip in card
+        let i = 1;
+        for (let node of best_trip) {
+            if (i == length) {
+                $("#best_trip_nodes").append(`
+                    <button type="button" class="btn btn-primary rounded-circle">${node}</button>
+                `);
+            } else {
+                $("#best_trip_nodes").append(`
+                    <button type="button" class="btn btn-primary rounded-circle">${node}</button> -> 
+                `);
+            }
+
+            i += 1;
+        };
+
+        $("#best_trip_card").show();
+    });
 </script>
 
 <script>
@@ -104,42 +135,13 @@
         var debug = $("#debug").is(":checked");
         var evaporation_rate = $("#evaporation_rate").val();
 
-        $.post("/backoffice/trip/search", 
-        {
-            "iter_input": iter_input,
-            "debug": debug,
-            "evaporation_rate": evaporation_rate
-        },
-        function(data) {
-            var best_trip = data["best_trip"];
-
-            let length = best_trip.length;
-            // update best trip in graph
-            for (let i = 0; i < length-1; i++) {
-                var networkgraph_link = chart.series[0]['data'].filter(function(d) {
-                    return d['from'] == best_trip[i] && d['to'] == best_trip[i+1];
-                })[0];
-                networkgraph_link.update({'color': 'yellow'});
+        socket.emit("search_trip", 
+            {
+                "iter_input": iter_input,
+                "debug": debug,
+                "evaporation_rate": evaporation_rate
             }
-
-            // update best trip in card
-            let i = 1;
-            for (let node of best_trip) {
-                if (i == length) {
-                    $("#best_trip_nodes").append(`
-                        <button type="button" class="btn btn-primary rounded-circle">${node}</button>
-                    `);
-                } else {
-                    $("#best_trip_nodes").append(`
-                        <button type="button" class="btn btn-primary rounded-circle">${node}</button> -> 
-                    `);
-                }
-
-                i += 1;
-            };
-
-            $("#best_trip_card").show();
-        });
+        );
     });
 </script>
 

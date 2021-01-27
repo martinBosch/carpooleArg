@@ -1,15 +1,25 @@
-from flask import Blueprint, request, render_template, session, url_for, redirect
+from flask import Blueprint, request, render_template, session, url_for, redirect, flash
 
 from aco import Grafo, ant_system
 
 bp = Blueprint("trip", __name__, url_prefix="/trip")
 
 
+nodes = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
+         "M", "N", "O", "P"]
+
+
 @bp.route("/publish", methods=['GET', 'POST'])
 def publish_trip():
     if request.method == "POST":
         trip = list(request.form.to_dict().values())
+        for node in trip:
+            if node not in nodes:
+                flash(f"El nodo \"{node}\" ingresado es invalido")
+                return redirect(url_for("trip.publish_trip"))
+
         add_trip(trip)
+        flash("Tu viaje a sido publicado!")
         return redirect(url_for("trip.search_trip"))
 
     return render_template("trip/publish_trip.html")

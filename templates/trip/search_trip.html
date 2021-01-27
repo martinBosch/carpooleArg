@@ -5,6 +5,16 @@
 {% block body %}
 <div class="container p-3 my-3 bg-light">
 
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for message in messages %}
+      <div id="flash_message" class="alert alert-success" role="alert">
+        {{message}}
+      </div>
+      {% endfor %}
+    {% endif %}
+    {% endwith %}
+
     <div id="container" class="mb-2"></div>
 
     <button id="search" class="btn btn-outline-primary">Buscar</button>
@@ -168,5 +178,8 @@ trips.forEach(function(trip) {
     })[0];
     networkgraph_link.update({'color': 'red'});
 });
+
+
+$('#flash_message').delay(2000).fadeOut('slow');
 </script>
 {% endblock %}

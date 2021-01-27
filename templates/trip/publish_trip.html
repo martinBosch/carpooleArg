@@ -5,6 +5,16 @@
 {% block body %}
 <div class="container p-3 my-3 bg-light">
 
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-danger" role="alert">
+      {{ message }}
+    </div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
   <form method="post">
 
     <div id="publish_trip_form_groups">

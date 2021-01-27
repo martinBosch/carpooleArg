@@ -16,7 +16,7 @@
 
     <ul class="navbar-nav ml-auto">
         <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               Usuario
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -28,6 +28,26 @@
 {% endblock %}
 
 {% block body %}
+<div class="d-flex justify-content-center">
+    <img src="{{url_for('static', filename='home.jpeg')}}" class="img-fluid" alt="CarpooleArg">
+</div>
+
+<div class="container d-flex justify-content-center">
+
+    <div class="card shadow mr-5">
+        <div class="card-body" style="color: cornflowerblue;">
+            <i class="bi bi-search "></i> Buscar
+        </div>
+        <a href="{{ url_for('trip.search_trip') }}" class="stretched-link"></a>
+    </div>
+
+    <div class="card shadow ml-5">
+        <div class="card-body" style="color: cornflowerblue;">
+            <i class="bi bi-plus-circle"></i> Publicar viaje
+        </div>
+        <a href="{{ url_for('trip.publish_trip') }}" class="stretched-link"></a>
+    </div>
+</div>
 {% endblock %}
 
 

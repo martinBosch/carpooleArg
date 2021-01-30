@@ -67,7 +67,7 @@ def lanzar_hormiga(grafo, debug):
 
 
 def ant_system(trips, iterations, evaporation_rate, debug):
-    grafo = Grafo(grafo=trips)
+    grafo = Grafo(trips)
 
     for iter_num in range(iterations):
         camino, distancia_camino = lanzar_hormiga(grafo, debug)
@@ -91,8 +91,9 @@ class Grafo:
     DISTANCIA = 0
     FEROMONA = 1
 
-    def __init__(self, grafo):
-        self.grafo = grafo
+    def __init__(self, trips):
+        self.grafo = trips
+        self._reset_feromone()
 
     def es_nodo_final(self, nodo):
         return nodo not in self.grafo
@@ -141,3 +142,8 @@ class Grafo:
             nodo = nodo_sig
 
         return mejor_camino
+
+    def _reset_feromone(self):
+        for nodo_origen in self.grafo:
+            for nodo_destino in self.grafo[nodo_origen]:
+                self.grafo[nodo_origen][nodo_destino][self.FEROMONA] = 1

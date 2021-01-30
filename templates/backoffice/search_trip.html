@@ -40,18 +40,10 @@
 
     <button id="search" class="btn btn-outline-primary">Buscar</button>
 
-    <div id="best_trip_card" style="display: none;">
-        <div class="row d-flex justify-content-center mt-2">
-            <div class="col-sm-6">
-              <div class="card shadow rounded">
-                <div class="card-body">
-                  <div id="best_trip_nodes" class="card-text"></div>
-                  <span class="badge badge-success float-right">Mejor viaje</span>
-                </div>
-              </div>
-            </div>
-        </div>    
-    </div>
+    <button id="search-in-progess" class="btn btn-outline-primary" type="button" style="display: none;" disabled>
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        <span class="sr-only">Loading...</span>
+    </button>
 
 </div>
 {% endblock %}
@@ -109,28 +101,24 @@
             networkgraph_link.update({'color': 'yellow'});
         }
 
-        // update best trip in card
-        let i = 1;
-        for (let node of best_trip) {
-            if (i == length) {
-                $("#best_trip_nodes").append(`
-                    <button type="button" class="btn btn-primary rounded-circle">${node}</button>
-                `);
-            } else {
-                $("#best_trip_nodes").append(`
-                    <button type="button" class="btn btn-primary rounded-circle">${node}</button> -> 
-                `);
-            }
-
-            i += 1;
-        };
-
-        $("#best_trip_card").show();
+        $("#search-in-progess").hide();
+        $("#search").show();
     });
 </script>
 
 <script>
     $("#search").click(function() {
+        $("#search").hide();
+        $("#search-in-progess").show();
+        //reset feromone
+        trips.forEach(function(trip) {
+            var networkgraph_link = chart.series[0]['data'].filter(function(d) {
+                return d['from'] == trip['from'] && d['to'] == trip['to'];
+            })[0];
+            networkgraph_link.update({'feromone': '1', 'color': 'red'});
+        });
+
+
         var iter_input = $("#iter_input").val();
         var debug = $("#debug").is(":checked");
         var evaporation_rate = $("#evaporation_rate").val();

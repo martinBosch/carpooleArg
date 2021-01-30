@@ -57,9 +57,9 @@ def search_trip():
 
 @socketIO.on("search_trip")
 def handle_search_trip(data):
-    iter_input = int(data["iter_input"])
+    iter_input = 25 if not data["iter_input"] else int(data["iter_input"])
     debug = data["debug"]
-    evaporation_rate = float(data["evaporation_rate"])
+    evaporation_rate = 0.0 if not data["evaporation_rate"] else float(data["evaporation_rate"])
 
     trips = session.get("trips", {})
     ant_system(trips, iter_input, evaporation_rate, debug)

@@ -1,6 +1,5 @@
 from flask import Blueprint, request, render_template, session, url_for, redirect, flash
-
-from aco import Grafo, ant_system
+from aco import ant_system
 
 bp = Blueprint("trip", __name__, url_prefix="/trip")
 
@@ -19,7 +18,7 @@ def publish_trip():
                 return redirect(url_for("trip.publish_trip"))
 
         add_trip(trip)
-        flash("Tu viaje a sido publicado!")
+        flash("Tu viaje a sido publicado!", "success")
         return redirect(url_for("trip.search_trip"))
 
     return render_template("trip/publish_trip.html")
@@ -65,11 +64,12 @@ def search_trip():
 
     trips = session.get("trips", {})
     if request.method == "POST":
+        if not trips:
+            return {"best_trip": []}
+
         iter = 50
         evaporation_rate = 0.1
-
-        grafo = Grafo(grafo=trips)
-        best_trip = ant_system(grafo, iter, evaporation_rate)
+        best_trip = ant_system(trips, iter, evaporation_rate)
         return {"best_trip": best_trip}
 
     return render_template("trip/search_trip.html",

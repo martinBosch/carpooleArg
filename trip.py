@@ -64,12 +64,21 @@ def search_trip():
 
     trips = session.get("trips", {})
     if request.method == "POST":
+        node_from = request.form["from"]
+        print("from:", node_from)
+        if node_from not in nodes:
+            return {"error": f"El nodo origen \"{node_from}\" ingresado es invalido"}
+        node_to = request.form["to"]
+        print("to:", node_to)
+        if node_to not in nodes:
+            return {"error": f"El nodo destino \"{node_to}\" ingresado es invalido"}
+
         if not trips:
             return {"best_trip": []}
 
         iter = 50
         evaporation_rate = 0.1
-        best_trip = ant_system(trips, iter, evaporation_rate)
+        best_trip = ant_system(node_from, node_to, trips, iter, evaporation_rate)
         return {"best_trip": best_trip}
 
     return render_template("trip/search_trip.html",

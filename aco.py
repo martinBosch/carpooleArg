@@ -15,8 +15,11 @@ def choose_nodo_siguiente(probabilidades_a_nodos_sig, nodos_sig):
         i += 1
 
 
-def actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate):
+def actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate, node_from, node_to):
     grafo.evaporar_feromona(evaporation_rate)
+
+    if camino[0] != node_from or camino[-1] != node_to:
+        return
 
     for i, j in zip(camino[0::1], camino[1::1]):
         feromona = 1 / distancia_camino
@@ -40,12 +43,12 @@ def elegir_siguiente_nodo(grafo, nodo):
     return nodo_sig
 
 
-def lanzar_hormiga(grafo):
-    nodo = "A"
-    camino = ["A"]
+def lanzar_hormiga(grafo, node_from, node_to):
+    nodo = node_from
+    camino = [node_from]
     distancia_camino = 0
 
-    while not grafo.es_nodo_final(nodo):
+    while nodo != node_to and not grafo.es_nodo_final(nodo):
         nodo_sig = elegir_siguiente_nodo(grafo, nodo)
         camino += [nodo_sig]
         distancia_camino += grafo.distancia(nodo, nodo_sig)
@@ -54,14 +57,17 @@ def lanzar_hormiga(grafo):
     return camino, distancia_camino
 
 
-def ant_system(trips, iterations, evaporation_rate):
+def ant_system(node_from, node_to, trips, iterations, evaporation_rate):
     grafo = Grafo(trips=trips)
 
     for iter_num in range(iterations):
-        camino, distancia_camino = lanzar_hormiga(grafo)
-        actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate)
+        camino, distancia_camino = lanzar_hormiga(grafo, node_from, node_to)
+        print("camino:", camino)
+        actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate, node_from, node_to)
 
-    mejor_camino = grafo.mejor_camino(nodo_inicial="A")
+    mejor_camino = grafo.mejor_camino(node_from, node_to)
+    print("mejor_camino:", mejor_camino)
+    print("grafo:", grafo.grafo)
     return mejor_camino
 
 
@@ -98,11 +104,11 @@ class Grafo:
             for nodo_destino in self.grafo[nodo_origen]:
                 self.grafo[nodo_origen][nodo_destino][self.FEROMONA] *= 1 - evaporation_rate
 
-    def mejor_camino(self, nodo_inicial):
-        mejor_camino = [nodo_inicial]
+    def mejor_camino(self, node_from, node_to):
+        mejor_camino = [node_from]
 
-        nodo = nodo_inicial
-        while not self.es_nodo_final(nodo):
+        nodo = node_from
+        while nodo != node_to and not self.es_nodo_final(nodo):
             vecinos = self.vecinos(nodo)
             nodo_sig = vecinos[0]
             max_feromona = self.feromona(nodo, vecinos[0])
@@ -112,7 +118,10 @@ class Grafo:
             mejor_camino.append(nodo_sig)
             nodo = nodo_sig
 
-        return mejor_camino
+        if mejor_camino[0] == node_from and mejor_camino[-1] == node_to:
+            return mejor_camino
+        else:
+            return []
 
     def _reset_feromone(self):
         for nodo_origen in self.grafo:

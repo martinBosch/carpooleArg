@@ -15,7 +15,34 @@
     {% endif %}
     {% endwith %}
 
-    <div id="info-message" class="alert alert-info" role="alert" style="display: none;">
+    <div id="info-message" class="alert alert-info mb-2" role="alert" style="display: none;">
+    </div>
+
+    <div id="error-message" class="alert alert-danger" role="alert" style="display: none;">
+    </div>
+  
+    <div class="row d-flex justify-content-center">
+        <div class="col-3">
+            <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend mr-2">
+                    <i class="bi bi-geo" style="font-size: 2rem; color: cornflowerblue;"></i>
+                  </div>
+                  <input type="text" value="" class="form-control mt-2" id="node_from" placeholder="Origen">
+                </div>
+            </div>
+        </div>
+
+        <div class="col-3">
+            <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend mr-2">
+                    <i class="bi bi-geo" style="font-size: 2rem; color: cornflowerblue;"></i>
+                  </div>
+                  <input type="text" value="" class="form-control mt-2" id="node_to" placeholder="Destino">
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="container" class="mb-2"></div>
@@ -47,9 +74,31 @@
 
 <script>
     $("#search").click(function() {
-        $.post("/trip/search", {}, function(data) {
+        $("#info-message").hide();
+        $("#error-message").hide();
+        //reset feromone
+        trips.forEach(function(trip) {
+            var networkgraph_link = chart.series[0]['data'].filter(function(d) {
+                return d['from'] == trip['from'] && d['to'] == trip['to'];
+            })[0];
+            networkgraph_link.update({'color': 'red'});
+        });
+
+        var node_from = $("#node_from").val();
+        var node_to = $("#node_to").val();
+        $.post("/trip/search", 
+        {
+            "from": node_from,
+            "to": node_to
+        },
+        function(data) {
             $("#best_trip_card").hide();
             $("#best_trip_nodes").html("");
+
+            if ("error" in data) {
+                $("#error-message").html(data["error"]);
+                $("#error-message").show();
+            };
 
             var best_trip = data["best_trip"];
             if (best_trip.length == 0) {

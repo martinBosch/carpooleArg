@@ -65,11 +65,10 @@ def search_trip():
     trips = session.get("trips", {})
     if request.method == "POST":
         node_from = request.form["from"]
-        print("from:", node_from)
         if node_from not in nodes:
             return {"error": f"El nodo origen \"{node_from}\" ingresado es invalido"}
+
         node_to = request.form["to"]
-        print("to:", node_to)
         if node_to not in nodes:
             return {"error": f"El nodo destino \"{node_to}\" ingresado es invalido"}
 

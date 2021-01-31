@@ -1,6 +1,9 @@
 from flask import Blueprint, session, render_template
+from flask_socketio import emit
+
 from backoffice.aco import ant_system
 from extensions import socketIO
+from trip import nodes
 
 
 bp = Blueprint("backoffice", __name__, url_prefix="/backoffice")
@@ -57,12 +60,26 @@ def search_trip():
 
 @socketIO.on("search_trip")
 def handle_search_trip(data):
+    node_from = data["from"]
+    if node_from not in nodes:
+        emit('search_trip_finish', {"error": f"El nodo origen \"{node_from}\" ingresado es invalido"})
+        return
+    node_to = data["to"]
+    if node_to not in nodes:
+        emit('search_trip_finish', {"error": f"El nodo destino \"{node_to}\" ingresado es invalido"})
+        return
+
     iter_input = 25 if not data["iter_input"] else int(data["iter_input"])
     debug = data["debug"]
     evaporation_rate = 0.0 if not data["evaporation_rate"] else float(data["evaporation_rate"])
 
     trips = session.get("trips", {})
-    ant_system(trips, iter_input, evaporation_rate, debug)
+    if not trips:
+        emit('search_trip_finish', {"best_trip": []})
+        return
+
+    best_trip = ant_system(node_from, node_to, trips, iter_input, evaporation_rate, debug)
+    emit('search_trip_finish', {"best_trip": best_trip})
 
 
 def to_trips_output(trips):

@@ -62,12 +62,9 @@ def ant_system(node_from, node_to, trips, iterations, evaporation_rate):
 
     for iter_num in range(iterations):
         camino, distancia_camino = lanzar_hormiga(grafo, node_from, node_to)
-        print("camino:", camino)
         actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate, node_from, node_to)
 
     mejor_camino = grafo.mejor_camino(node_from, node_to)
-    print("mejor_camino:", mejor_camino)
-    print("grafo:", grafo.grafo)
     return mejor_camino
 
 

@@ -1,5 +1,6 @@
-from flask import Blueprint, session, render_template
+from flask import Blueprint, session, render_template, url_for
 from flask_socketio import emit
+from werkzeug.utils import redirect
 
 from backoffice.aco import ant_system
 from extensions import socketIO
@@ -80,6 +81,13 @@ def handle_search_trip(data):
 
     best_trip = ant_system(node_from, node_to, trips, iter_input, evaporation_rate, debug)
     emit('search_trip_finish', {"best_trip": best_trip})
+
+
+@bp.route("/trip/delete", methods=['POST'])
+def delete_all_trips():
+    session["trips"] = {}
+    print("delete")
+    return redirect(url_for("backoffice.search_trip"))
 
 
 def to_trips_output(trips):

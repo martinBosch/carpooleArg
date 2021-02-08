@@ -1,6 +1,5 @@
-from flask import Blueprint, session, render_template, url_for
+from flask import Blueprint, session, render_template, url_for, redirect, request
 from flask_socketio import emit
-from werkzeug.utils import redirect
 
 from backoffice.aco import ant_system
 from extensions import socketIO
@@ -73,6 +72,10 @@ def handle_search_trip(data):
     iter_input = 25 if not data["iter_input"] else int(data["iter_input"])
     debug = data["debug"]
     evaporation_rate = 0.0 if not data["evaporation_rate"] else float(data["evaporation_rate"])
+    session["iter"] = iter_input
+    print("iter:", session["iter"])
+    session["evaporation_rate"] = evaporation_rate
+    print("evaporation rate:", session["evaporation_rate"])
 
     trips = session.get("trips", {})
     if not trips:
@@ -83,10 +86,18 @@ def handle_search_trip(data):
     emit('search_trip_finish', {"best_trip": best_trip})
 
 
+@bp.route("/trip/search/configs", methods=['POST'])
+def save_search_trip_configs():
+    iter_input = 25 if not request.form["iter_input"] else int(request.form["iter_input"])
+    evaporation_rate = 0.0 if not request.form["evaporation_rate"] else float(request.form["evaporation_rate"])
+    session["iter"] = iter_input
+    session["evaporation_rate"] = evaporation_rate
+    return {}
+
+
 @bp.route("/trip/delete", methods=['POST'])
 def delete_all_trips():
     session["trips"] = {}
-    print("delete")
     return redirect(url_for("backoffice.search_trip"))
 
 

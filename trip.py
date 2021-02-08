@@ -75,8 +75,8 @@ def search_trip():
         if not trips:
             return {"best_trip": []}
 
-        iter = 50
-        evaporation_rate = 0.1
+        iter = session.get("iter", 50)
+        evaporation_rate = session.get("evaporation_rate", 0.1)
         best_trip = ant_system(node_from, node_to, trips, iter, evaporation_rate)
         return {"best_trip": best_trip}
 

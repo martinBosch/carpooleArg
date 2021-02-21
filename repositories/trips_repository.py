@@ -8,3 +8,6 @@ class TripsRepository:
     def get_all_trips(self):
         trips = self.mongo.carpoolearg.trips.find({})
         return [trip["trip"] for trip in trips]
+
+    def delete_all_trips(self):
+        self.mongo.carpoolearg.trips.delete_many({})

@@ -1,6 +1,6 @@
-from flask import Blueprint, request, render_template, session, url_for, redirect, flash
+from flask import Blueprint, request, render_template, url_for, redirect, flash
 from aco.aco import ant_system
-from config import trips_repository
+from config import trips_repository, aco_configurations_repository
 
 bp = Blueprint("trip", __name__, url_prefix="/trip")
 
@@ -64,7 +64,6 @@ def search_trip():
     ]
 
     trips = trips_repository.get_all_trips()
-    print("trips:", trips)
 
     if request.method == "POST":
         node_from = request.form["from"]
@@ -78,8 +77,12 @@ def search_trip():
         if not trips:
             return {"best_trip": []}
 
-        iter = session.get("iter", 50)
-        evaporation_rate = session.get("evaporation_rate", 0.1)
+        aco_configurations = aco_configurations_repository.get_configurations()
+        if aco_configurations is None:
+            aco_configurations = {"iter": 50, "evaporation_rate": 0.1}
+        iter = aco_configurations["iter"]
+        evaporation_rate = aco_configurations["evaporation_rate"]
+
         best_trip = ant_system(node_from, node_to, trips, iter, evaporation_rate)
         return {"best_trip": best_trip}
 

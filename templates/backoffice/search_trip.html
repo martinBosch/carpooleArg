@@ -187,21 +187,23 @@
         var node_to = $("#node_to").val();
 
         $.post("/backoffice/trip/search/configs", 
-        {
-            "iter_input": iter_input,
-            "evaporation_rate": evaporation_rate
-        },
-        function(data) {
-            socket.emit("search_trip", 
             {
                 "iter_input": iter_input,
-                "debug": debug,
                 "evaporation_rate": evaporation_rate,
-                "from": node_from,
-                "to": node_to
+                "debug": debug
+            },
+            function(data) {
+                socket.emit("search_trip", 
+                {
+                    "iter_input": iter_input,
+                    "debug": debug,
+                    "evaporation_rate": evaporation_rate,
+                    "from": node_from,
+                    "to": node_to
+                }
+                );
             }
-            );
-        });
+        );
 
     });
 </script>

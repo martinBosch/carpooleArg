@@ -1,8 +1,8 @@
-from flask import Blueprint, session, render_template, url_for, redirect, request
+from flask import Blueprint, render_template, url_for, redirect, request
 from flask_socketio import emit
 
 from backoffice.aco.aco import ant_system
-from config import socketIO, trips_repository
+from config import socketIO, trips_repository, aco_configurations_repository
 from routes.trip import nodes
 
 
@@ -69,13 +69,10 @@ def handle_search_trip(data):
         emit('search_trip_finish', {"error": f"El nodo destino \"{node_to}\" ingresado es invalido"})
         return
 
-    iter_input = 25 if not data["iter_input"] else int(data["iter_input"])
-    debug = data["debug"]
-    evaporation_rate = 0.0 if not data["evaporation_rate"] else float(data["evaporation_rate"])
-    session["iter"] = iter_input
-    print("iter:", session["iter"])
-    session["evaporation_rate"] = evaporation_rate
-    print("evaporation rate:", session["evaporation_rate"])
+    aco_configurations = aco_configurations_repository.get_configurations()
+    iter_input = aco_configurations["iter"]
+    debug = aco_configurations["debug"]
+    evaporation_rate = aco_configurations["evaporation_rate"]
 
     trips = trips_repository.get_all_trips()
     if not trips:
@@ -88,16 +85,21 @@ def handle_search_trip(data):
 
 @bp.route("/trip/search/configs", methods=['POST'])
 def save_search_trip_configs():
-    iter_input = 25 if not request.form["iter_input"] else int(request.form["iter_input"])
-    evaporation_rate = 0.0 if not request.form["evaporation_rate"] else float(request.form["evaporation_rate"])
-    session["iter"] = iter_input
-    session["evaporation_rate"] = evaporation_rate
+    iter_input = int(request.form["iter_input"])
+    evaporation_rate = float(request.form["evaporation_rate"])
+    debug = request.form["debug"] == "true"
+    aco_configurations_repository.save_configurations(
+        iter=iter_input,
+        evaporation_rate=evaporation_rate,
+        debug=debug
+    )
+
     return {}
 
 
 @bp.route("/trip/delete", methods=['POST'])
 def delete_all_trips():
-    session["trips"] = {}
+    trips_repository.delete_all_trips()
     return redirect(url_for("backoffice.search_trip"))
 
 

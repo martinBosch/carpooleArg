@@ -94,12 +94,12 @@ def ant_system(node_from, node_to, trips, iterations, evaporation_rate, debug):
 
 
 class Grafo:
+
     DISTANCIA = 0
     FEROMONA = 1
 
     def __init__(self, trips):
-        self.grafo = trips
-        self._reset_feromone()
+        self.grafo = self._init_grafo(trips)
 
     def es_nodo_final(self, nodo):
         return nodo not in self.grafo
@@ -152,7 +152,14 @@ class Grafo:
         else:
             return []
 
-    def _reset_feromone(self):
-        for nodo_origen in self.grafo:
-            for nodo_destino in self.grafo[nodo_origen]:
-                self.grafo[nodo_origen][nodo_destino][self.FEROMONA] = 1
+    def _init_grafo(self, trips):
+        grafo = {}
+        for trip in trips:
+            for i in range(len(trip) - 1):
+                nodo = trip[i]
+                nodo_sig = trip[i + 1]
+                if nodo not in trips:
+                    grafo[nodo] = {}
+                grafo[nodo][nodo_sig] = [1, 1]
+
+        return grafo

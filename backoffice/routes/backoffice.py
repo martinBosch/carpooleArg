@@ -1,9 +1,9 @@
 from flask import Blueprint, session, render_template, url_for, redirect, request
 from flask_socketio import emit
 
-from backoffice.aco import ant_system
-from extensions import socketIO
-from trip import nodes
+from backoffice.aco.aco import ant_system
+from config import socketIO, trips_repository
+from routes.trip import nodes
 
 
 bp = Blueprint("backoffice", __name__, url_prefix="/backoffice")
@@ -51,7 +51,7 @@ def search_trip():
         {"from": "N", "to": "O", "feromone": 1},
         {"from": "O", "to": "P", "feromone": 1},
     ]
-    trips = session.get("trips", {})
+    trips = trips_repository.get_all_trips()
 
     return render_template("backoffice/search_trip.html",
                            data=data,
@@ -77,7 +77,7 @@ def handle_search_trip(data):
     session["evaporation_rate"] = evaporation_rate
     print("evaporation rate:", session["evaporation_rate"])
 
-    trips = session.get("trips", {})
+    trips = trips_repository.get_all_trips()
     if not trips:
         emit('search_trip_finish', {"best_trip": []})
         return
@@ -103,10 +103,10 @@ def delete_all_trips():
 
 def to_trips_output(trips):
     trips_output = []
-    nodos = trips.keys()
-    for nodo in nodos:
-        nodos_sig = trips[nodo].keys()
-        for nodo_sig in nodos_sig:
+    for trip in trips:
+        for i in range(len(trip) - 1):
+            nodo = trip[i]
+            nodo_sig = trip[i + 1]
             trips_output.append({"from": nodo, "to": nodo_sig})
 
     return trips_output

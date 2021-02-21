@@ -1,7 +1,7 @@
 from flask import Flask, render_template
-from extensions import socketIO
-from backoffice.backoffice import bp as backoffice_bp
-from trip import bp as trip_bp
+from config import socketIO
+from backoffice.routes.backoffice import bp as backoffice_bp
+from routes.trip import bp as trip_bp
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'

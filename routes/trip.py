@@ -1,5 +1,6 @@
 from flask import Blueprint, request, render_template, session, url_for, redirect, flash
-from aco import ant_system
+from aco.aco import ant_system
+from config import trips_repository
 
 bp = Blueprint("trip", __name__, url_prefix="/trip")
 
@@ -17,7 +18,7 @@ def publish_trip():
                 flash(f"El nodo \"{node}\" ingresado es invalido")
                 return redirect(url_for("trip.publish_trip"))
 
-        add_trip(trip)
+        trips_repository.save_trip(trip)
         flash("Tu viaje a sido publicado!", "success")
         return redirect(url_for("trip.search_trip"))
 
@@ -62,7 +63,9 @@ def search_trip():
         {"from": "O", "to": "P"},
     ]
 
-    trips = session.get("trips", {})
+    trips = trips_repository.get_all_trips()
+    print("trips:", trips)
+
     if request.method == "POST":
         node_from = request.form["from"]
         if node_from not in nodes:
@@ -87,23 +90,10 @@ def search_trip():
 
 def to_trips_output(trips):
     trips_output = []
-    nodos = trips.keys()
-    for nodo in nodos:
-        nodos_sig = trips[nodo].keys()
-        for nodo_sig in nodos_sig:
+    for trip in trips:
+        for i in range(len(trip) - 1):
+            nodo = trip[i]
+            nodo_sig = trip[i + 1]
             trips_output.append({"from": nodo, "to": nodo_sig})
 
     return trips_output
-
-
-def add_trip(trip):
-    trips = session.get("trips", {})
-
-    for i in range(len(trip) - 1):
-        nodo = trip[i]
-        nodo_sig = trip[i + 1]
-        if nodo not in trips:
-            trips[nodo] = {}
-        trips[nodo][nodo_sig] = [1, 1]
-
-    session["trips"] = trips

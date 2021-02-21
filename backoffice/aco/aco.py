@@ -158,7 +158,7 @@ class Grafo:
             for i in range(len(trip) - 1):
                 nodo = trip[i]
                 nodo_sig = trip[i + 1]
-                if nodo not in trips:
+                if nodo not in grafo:
                     grafo[nodo] = {}
                 grafo[nodo][nodo_sig] = [1, 1]
 

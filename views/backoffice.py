@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, url_for, redirect, request
 from flask_socketio import emit
 
-from backoffice.aco.aco import ant_system
+from aco.aco_backoffice import ant_system
 from config import socketIO, trips_repository, aco_configurations_repository
-from routes.trip import nodes
+from views.trip import nodes
 
 
 bp = Blueprint("backoffice", __name__, url_prefix="/backoffice")

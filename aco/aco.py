@@ -15,14 +15,42 @@ def choose_nodo_siguiente(probabilidades_a_nodos_sig, nodos_sig):
         i += 1
 
 
-def actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate, node_from, node_to):
+def actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate):
     grafo.evaporar_feromona(evaporation_rate)
-
-    if camino[0] != node_from or camino[-1] != node_to:
-        return
 
     for i, j in zip(camino[0::1], camino[1::1]):
         feromona = 1 / distancia_camino
+        grafo.actualizar_feromona(i, j, feromona)
+
+
+def elitist_actualizar_feromonas(grafo, camino, distancia_camino, best_tour_so_far, best_tour_so_far_distance, evaporation_rate, weight_best_tour_so_far):
+    grafo.evaporar_feromona(evaporation_rate)
+
+    for i, j in zip(camino[0::1], camino[1::1]):
+        feromona = 1 / distancia_camino
+        grafo.actualizar_feromona(i, j, feromona)
+
+    e = weight_best_tour_so_far
+    for i, j in zip(best_tour_so_far[0::1], best_tour_so_far[1::1]):
+        feromona = e / best_tour_so_far_distance
+        grafo.actualizar_feromona(i, j, feromona)
+
+
+def rank_actualizar_feromonas(grafo, iteration_tours, number_ants_to_rank, best_tour_so_far, best_tour_so_far_distance, evaporation_rate):
+    grafo.evaporar_feromona(evaporation_rate)
+
+    ranked_iteration_tours = sorted(iteration_tours, key=lambda x: x["distancia_camino"])
+    w = number_ants_to_rank
+    r = 1
+    for ranked_tour in ranked_iteration_tours:
+        camino = ranked_tour["camino"]
+        distancia_camino = ranked_tour["distancia_camino"]
+        for i, j in zip(camino[0::1], camino[1::1]):
+            feromona = (w - r) / distancia_camino
+            grafo.actualizar_feromona(i, j, feromona)
+
+    for i, j in zip(best_tour_so_far[0::1], best_tour_so_far[1::1]):
+        feromona = w / best_tour_so_far_distance
         grafo.actualizar_feromona(i, j, feromona)
 
 
@@ -62,10 +90,51 @@ def ant_system(node_from, node_to, trips, iterations, evaporation_rate):
 
     for iter_num in range(iterations):
         camino, distancia_camino = lanzar_hormiga(grafo, node_from, node_to)
-        actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate, node_from, node_to)
+        if camino[0] == node_from and camino[-1] == node_to:
+            actualizar_feromonas(grafo, camino, distancia_camino, evaporation_rate)
 
     mejor_camino = grafo.mejor_camino(node_from, node_to)
     return mejor_camino
+
+
+def elitist_ant_system(node_from, node_to, trips, iterations, evaporation_rate, weight_best_tour_so_far):
+    grafo = Grafo(trips)
+
+    best_tour_so_far = None
+    best_tour_so_far_distance = 0
+    for iter_num in range(iterations):
+        camino, distancia_camino = lanzar_hormiga(grafo, node_from, node_to)
+        if camino[0] == node_from and camino[-1] == node_to:
+            if distancia_camino < best_tour_so_far_distance or best_tour_so_far is None:
+                best_tour_so_far = camino
+                best_tour_so_far_distance = distancia_camino
+
+            elitist_actualizar_feromonas(grafo, camino, distancia_camino, best_tour_so_far, best_tour_so_far_distance, evaporation_rate, weight_best_tour_so_far)
+
+    best_trip = grafo.mejor_camino(node_from, node_to)
+    return best_trip
+
+
+def rank_ant_system(node_from, node_to, trips, iterations, ants_per_iteration, number_ants_to_rank, evaporation_rate):
+    grafo = Grafo(trips)
+
+    best_tour_so_far = None
+    best_tour_so_far_distance = 0
+    for iter_num in range(iterations):
+        iteration_tours = []
+        for _ in range(ants_per_iteration):
+            camino, distancia_camino = lanzar_hormiga(grafo, node_from, node_to)
+            if camino[0] == node_from and camino[-1] == node_to:
+                if distancia_camino < best_tour_so_far_distance or best_tour_so_far is None:
+                    best_tour_so_far = camino
+                    best_tour_so_far_distance = distancia_camino
+
+                iteration_tours.append({"camino": camino, "distancia_camino": distancia_camino})
+
+        rank_actualizar_feromonas(grafo, iteration_tours, number_ants_to_rank, best_tour_so_far, best_tour_so_far_distance, evaporation_rate)
+
+    best_trip = grafo.mejor_camino(node_from, node_to)
+    return best_trip
 
 
 class Grafo:

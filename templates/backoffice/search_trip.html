@@ -5,9 +5,16 @@
     <div class="row">
 
         <div class="col">
+            <div class="form-group aco_algorithm">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="aco_algorithms" id="ant_system" value="ant_system" checked>
+                    <label class="form-check-label" for="ant_system">Ant System</label>
+                </div>
+            </div>
+
             <div class="form-group">
                 <div class="input-group">
-                    <div class="input-group-prepend mr-2">
+                    <div class="input-group-prepend mr-2" data-toggle="tooltip" data-placement="top" title="numero de iteraciones">
                         <i class="bi bi-hourglass-split" style="font-size: 2rem; color: cornflowerblue;"></i>
                     </div>
                     <div class="col-6">
@@ -18,7 +25,7 @@
         
             <div class="form-group">
                 <div class="input-group">
-                    <div class="input-group-prepend mr-2">
+                    <div class="input-group-prepend mr-2" data-toggle="tooltip" data-placement="top" title="velocidad de evaporación de feromonas">
                         <i class="bi bi-eraser-fill" style="font-size: 2rem; color: cornflowerblue;"></i>
                     </div>
                     <div class="col-6">
@@ -31,6 +38,57 @@
                 <input type="checkbox" class="custom-control-input" id="debug">
                 <label class="custom-control-label" for="debug">Debug</label>
             </div>        
+        </div>
+
+        <div class="col">
+            <div class="form-group aco_algorithm">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="aco_algorithms" id="elitist_ant_system" value="elitist_ant_system">
+                    <label class="form-check-label" for="elitist_ant_system">Elitist An System</label>
+                </div>
+            </div>
+
+            <div class="form-group" id="weight_best_tour_so_far_form_group" style="display: none;">
+                <div class="input-group">
+                    <div class="input-group-prepend mr-2" data-toggle="tooltip" data-placement="top" title="peso dado al mejor tour encontrado">
+                        <i class="bi bi-nut-fill" style="font-size: 2rem; color: cornflowerblue;"></i>
+                    </div>
+                    <div class="col-6">
+                        <input type="text" value="16" class="form-control mt-2" id="weight_best_tour_so_far" placeholder="peso dado al mejor tour encontrado">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="form-group aco_algorithm">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="aco_algorithms" id="rank_ant_system" value="rank_ant_system">
+                    <label class="form-check-label" for="rank_ant_system">Rank An System</label>
+                </div>
+            </div>
+
+            <div class="form-group" id="ants_per_iteration_form_group" style="display: none;">
+                <div class="input-group">
+                    <div class="input-group-prepend mr-2" data-toggle="tooltip" data-placement="top" title="cantidad de hormigas por iteracion">
+                        <i class="bi bi-arrow-clockwise" style="font-size: 2rem; color: cornflowerblue;"></i>
+                    </div>
+                    <div class="col-6">
+                        <input type="text" value="10" class="form-control mt-2" id="ants_per_iteration" placeholder="cantidad de hormigas por iteracion">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" id="number_ants_to_rank_form_group" style="display: none;">
+                <div class="input-group">
+                    <div class="input-group-prepend mr-2" data-toggle="tooltip" data-placement="top" title="cantidad de hormigas a rankear por iteracion">
+                        <i class="bi bi-bootstrap-reboot" style="font-size: 2rem; color: cornflowerblue;"></i>
+                    </div>
+                    <div class="col-6">
+                        <input type="text" value="6" class="form-control mt-2" id="number_ants_to_rank" placeholder="cantidad de hormigas a rankear por iteracion">
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="col">
@@ -182,6 +240,14 @@
         var iter_input = $("#iter_input").val();
         var debug = $("#debug").is(":checked");
         var evaporation_rate = $("#evaporation_rate").val();
+        var aco_algorithm = $(".aco_algorithm input[name=aco_algorithms]:checked").val();
+        console.log("aco_algorithm:", aco_algorithm);
+        var weight_best_tour_so_far = $("#weight_best_tour_so_far").val();
+        console.log("weight_best_tour_so_far:", weight_best_tour_so_far);
+        var ants_per_iteration = $("#ants_per_iteration").val();
+        console.log("ants_per_iteration:", ants_per_iteration);
+        var number_ants_to_rank = $("#number_ants_to_rank").val();
+        console.log("number_ants_to_rank:", number_ants_to_rank);
 
         var node_from = $("#node_from").val();
         var node_to = $("#node_to").val();
@@ -190,14 +256,15 @@
             {
                 "iter_input": iter_input,
                 "evaporation_rate": evaporation_rate,
-                "debug": debug
+                "debug": debug,
+                "aco_algorithm": aco_algorithm,
+                "weight_best_tour_so_far": weight_best_tour_so_far,
+                "ants_per_iteration": ants_per_iteration,
+                "number_ants_to_rank": number_ants_to_rank
             },
             function(data) {
                 socket.emit("search_trip", 
                 {
-                    "iter_input": iter_input,
-                    "debug": debug,
-                    "evaporation_rate": evaporation_rate,
                     "from": node_from,
                     "to": node_to
                 }
@@ -206,6 +273,29 @@
         );
 
     });
+</script>
+
+<script>
+    $(".aco_algorithm input[name=aco_algorithms]").change(function() {
+        if (this.value == "ant_system") {
+            $("#weight_best_tour_so_far_form_group").hide("slow");
+            $("#ants_per_iteration_form_group").hide("slow");
+            $("#number_ants_to_rank_form_group").hide("slow");
+        }
+        else if (this.value == "elitist_ant_system") {
+            $("#weight_best_tour_so_far_form_group").show();
+
+            $("#ants_per_iteration_form_group").hide("slow");
+            $("#number_ants_to_rank_form_group").hide("slow");
+        }
+        else if (this.value == "rank_ant_system") {
+            $("#ants_per_iteration_form_group").show();
+            $("#number_ants_to_rank_form_group").show();
+
+            $("#weight_best_tour_so_far_form_group").hide("slow");
+        }
+    });
+
 </script>
 
 <script>

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, render_template, url_for, redirect, flash
-from aco.aco import ant_system
+from aco.aco import ant_system, elitist_ant_system, rank_ant_system
 from config import trips_repository, aco_configurations_repository
 
 bp = Blueprint("trip", __name__, url_prefix="/trip")
@@ -79,11 +79,30 @@ def search_trip():
 
         aco_configurations = aco_configurations_repository.get_configurations()
         if aco_configurations is None:
-            aco_configurations = {"iter": 50, "evaporation_rate": 0.1}
+            aco_configurations = {
+                "iter": 50,
+                "evaporation_rate": 0.1,
+                "aco_algorithm": "ant_system",
+                "weight_best_tour_so_far": 16,
+                "ants_per_iteration": 10,
+                "number_ants_to_rank": 6
+            }
         iter = aco_configurations["iter"]
         evaporation_rate = aco_configurations["evaporation_rate"]
+        aco_algorithm = aco_configurations["aco_algorithm"]
 
-        best_trip = ant_system(node_from, node_to, trips, iter, evaporation_rate)
+        if aco_algorithm == "ant_system":
+            best_trip = ant_system(node_from, node_to, trips, iter, evaporation_rate)
+        elif aco_algorithm == "elitist_ant_system":
+            weight_best_tour_so_far = aco_configurations["weight_best_tour_so_far"]
+            best_trip = elitist_ant_system(node_from, node_to, trips, iter, evaporation_rate, weight_best_tour_so_far)
+        elif aco_algorithm == "rank_ant_system":
+            ants_per_iteration = aco_configurations["ants_per_iteration"]
+            number_ants_to_rank = aco_configurations["number_ants_to_rank"]
+            best_trip = rank_ant_system(node_from, node_to, trips, iter, ants_per_iteration, number_ants_to_rank, evaporation_rate)
+        else:
+            best_trip = ant_system(node_from, node_to, trips, iter, evaporation_rate)
+
         return {"best_trip": best_trip}
 
     return render_template("trip/search_trip.html",

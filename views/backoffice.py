@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, url_for, redirect, request
 from flask_socketio import emit
 
-from aco.aco_backoffice import ant_system
+from aco.aco_backoffice import ant_system, elitist_ant_system, rank_ant_system
 from config import socketIO, trips_repository, aco_configurations_repository
 from views.trip import nodes
 
@@ -69,17 +69,29 @@ def handle_search_trip(data):
         emit('search_trip_finish', {"error": f"El nodo destino \"{node_to}\" ingresado es invalido"})
         return
 
-    aco_configurations = aco_configurations_repository.get_configurations()
-    iter_input = aco_configurations["iter"]
-    debug = aco_configurations["debug"]
-    evaporation_rate = aco_configurations["evaporation_rate"]
-
     trips = trips_repository.get_all_trips()
     if not trips:
         emit('search_trip_finish', {"best_trip": []})
         return
 
-    best_trip = ant_system(node_from, node_to, trips, iter_input, evaporation_rate, debug)
+    aco_configurations = aco_configurations_repository.get_configurations()
+    iter_input = aco_configurations["iter"]
+    debug = aco_configurations["debug"]
+    evaporation_rate = aco_configurations["evaporation_rate"]
+    aco_algorithm = aco_configurations["aco_algorithm"]
+
+    if aco_algorithm == "ant_system":
+        best_trip = ant_system(node_from, node_to, trips, iter_input, evaporation_rate, debug)
+    elif aco_algorithm == "elitist_ant_system":
+        weight_best_tour_so_far = aco_configurations["weight_best_tour_so_far"]
+        best_trip = elitist_ant_system(node_from, node_to, trips, iter_input, evaporation_rate, weight_best_tour_so_far, debug)
+    elif aco_algorithm == "rank_ant_system":
+        ants_per_iteration = aco_configurations["ants_per_iteration"]
+        number_ants_to_rank = aco_configurations["number_ants_to_rank"]
+        best_trip = rank_ant_system(node_from, node_to, trips, iter_input, ants_per_iteration, number_ants_to_rank, evaporation_rate, debug)
+    else:
+        best_trip = ant_system(node_from, node_to, trips, iter_input, evaporation_rate, debug)
+
     emit('search_trip_finish', {"best_trip": best_trip})
 
 
@@ -88,10 +100,19 @@ def save_search_trip_configs():
     iter_input = int(request.form["iter_input"])
     evaporation_rate = float(request.form["evaporation_rate"])
     debug = request.form["debug"] == "true"
+    aco_algorithm = request.form["aco_algorithm"]
+    weight_best_tour_so_far = int(request.form["weight_best_tour_so_far"])
+    ants_per_iteration = int(request.form["ants_per_iteration"])
+    number_ants_to_rank = int(request.form["number_ants_to_rank"])
+
     aco_configurations_repository.save_configurations(
         iter=iter_input,
         evaporation_rate=evaporation_rate,
-        debug=debug
+        debug=debug,
+        aco_algorithm=aco_algorithm,
+        weight_best_tour_so_far=weight_best_tour_so_far,
+        ants_per_iteration=ants_per_iteration,
+        number_ants_to_rank=number_ants_to_rank
     )
 
     return {}
